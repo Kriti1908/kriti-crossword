@@ -17,6 +17,9 @@ export default {
     const out = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...cors } });
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
 
+    try {
+    if (!env.KV) return out({ error: 'server misconfigured: the KV binding named "KV" is missing in wrangler.toml' }, 500);
+
     let P;
     try { P = buildPuzzle(JSON.parse(env.PUZZLE_JSON)); } catch { return out({ error: 'server not configured' }, 500); }
     const path = new URL(req.url).pathname;
@@ -59,5 +62,9 @@ export default {
       return out({ correct: false });
     }
     return out({ error: 'not found' }, 404);
+    } catch (e) {                                   // never leak a bare crash page: the browser needs CORS headers to show the real error
+      console.error(e);
+      return out({ error: 'server error: ' + (e && e.message ? e.message : 'unknown') }, 500);
+    }
   },
 };

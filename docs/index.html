@@ -42,6 +42,7 @@ color:var(--ink);padding:0;margin:0;text-transform:uppercase;outline:0;caret-col
 <span class="float" style="left:7%;bottom:10%;animation-delay:2s">☁️</span><span class="float" style="right:5%;bottom:14%;animation-delay:3s">⭐</span>
 <main class="card" id="app"><p>Loading…</p></main>
 <script src="config.js"></script>
+<script>if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname))document.write('<script src="config.local.js"><\/script>')</script>
 <script>
 const $=s=>document.querySelector(s);
 const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
@@ -90,7 +91,7 @@ function build(){
  <input id="ana" class="field" placeholder="${P.anagramLen} letters" autocomplete="off" spellcheck="false"><br>
  <button id="chk" class="alt">Check crossword ✓</button><button id="ok">Unlock ✨</button><div class="msg" id="msg"></div>`;
  app.append(wrap,bottom);
- $('#chk').onclick=()=>submit(false);$('#ok').onclick=()=>submit(true);$('#ana').onkeydown=e=>e.key==='Enter'&&submit(true);
+ $('#chk').onclick=()=>submit(false);$('#ok').onclick=()=>submit(true);$('#ana').onkeydown=e=>{if(e.key==='Enter')submit(true);};
  tray();
 }
 

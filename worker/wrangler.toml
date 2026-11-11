@@ -7,5 +7,5 @@ compatibility_date = "2024-11-01"
 ALLOWED_ORIGINS = "https://kriti1908.github.io"
 
 [[kv_namespaces]]
-binding = "KV_crossword"
+binding = "KV"
 id = "0f5fff7c1c84433d9aaf703cfc4b32a2"

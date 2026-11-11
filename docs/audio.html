@@ -26,6 +26,7 @@ button:hover,.btn:hover{transform:translateY(-2px)}button:active{transform:trans
 <span class="float" style="left:10%;bottom:12%;animation-delay:2s">☁️</span><span class="float" style="right:7%;bottom:18%;animation-delay:3s">⭐</span>
 <main class="card" id="app"><p>Loading…</p></main>
 <script src="config.js"></script>
+<script>if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname))document.write('<script src="config.local.js"><\/script>')</script>
 <script>
 const $=s=>document.querySelector(s);
 const T=new URLSearchParams(location.search).get('t')||'';
@@ -53,7 +54,7 @@ function question(){
    $('#msg').textContent='Hmm, that’s not what I said 🥲 listen to the other clip again!';
   }catch(e){$('#msg').textContent=e.message}
   busy=false;};
- $('#ok').onclick=go;$('#ans').onkeydown=e=>e.key==='Enter'&&go();
+ $('#ok').onclick=go;$('#ans').onkeydown=e=>{if(e.key==='Enter')go();};
 }
 
 function win(link){

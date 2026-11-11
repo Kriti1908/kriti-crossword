@@ -161,9 +161,9 @@ a browser can always be read by that player; the point is that they have to solv
 
 ## 5. Tips
 
-- Local test: put `PUZZLE_JSON=<puzzle.json minified on one line>` in `worker/.dev.vars`, run `npx wrangler dev`, set
-  `docs/config.js` to `http://localhost:8787`, add `http://localhost:8000` to `ALLOWED_ORIGINS`, and serve `docs/` with
-  `python3 -m http.server 8000`.
+- **Test locally (no Cloudflare login needed):** see "Testing locally" in the root of this zip's `TESTING-LOCALLY.md`
+  (short version: `cd worker && cp quiz.example.json quiz.json` if needed, `node make-devvars.mjs`, `npx wrangler dev --port 8787`,
+  serve `docs/` on port 8000, and put `window.API_URL = "http://localhost:8787";` in `docs/config.local.js`).
 - Controls: click a cell (click again to flip across/down), type to auto-advance, arrow keys move, Backspace goes back, clicking a clue jumps to it.
 - A puzzle layout change = new coordinates. Edit `puzzle.json`, run `node check.mjs`, re-upload the secret.
 - Free tier: KV allows ~1000 writes/day; each check is one write.
