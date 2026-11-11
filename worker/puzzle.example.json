@@ -1,0 +1,46 @@
+{
+  "anagram": "awa",
+  "next": "https://yourname.github.io/your-repo/audio.html",
+  "nextTicket": true,
+  "audio": {
+    "answer": "the secret sentence",
+    "link": "https://example.com/final-link"
+  },
+  "red": [
+    [
+      2,
+      0
+    ],
+    [
+      0,
+      1
+    ],
+    [
+      2,
+      2
+    ]
+  ],
+  "words": [
+    {
+      "dir": "across",
+      "row": 0,
+      "col": 0,
+      "answer": "CAT",
+      "clue": "Purring pet"
+    },
+    {
+      "dir": "down",
+      "row": 0,
+      "col": 0,
+      "answer": "COW",
+      "clue": "Says moo"
+    },
+    {
+      "dir": "down",
+      "row": 0,
+      "col": 2,
+      "answer": "TEA",
+      "clue": "Chai, in English"
+    }
+  ]
+}

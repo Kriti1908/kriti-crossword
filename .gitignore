@@ -1,0 +1,4 @@
+worker/puzzle.json
+worker/.dev.vars
+node_modules/
+.wrangler/

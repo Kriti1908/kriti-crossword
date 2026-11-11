@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A very cute crossword 🧩</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--pink:#ffd6e7;--lav:#e4d9ff;--mint:#d5f5e3;--sky:#d6ecff;--ink:#5b4b6b;--acc:#ff8fb8;--acc2:#b79cff;--red:#ff4d6d}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:'Fredoka','Nunito',system-ui,sans-serif;color:var(--ink);
+background:linear-gradient(135deg,var(--pink),var(--lav) 50%,var(--sky));display:flex;justify-content:center;align-items:flex-start;padding:20px 12px;overflow-x:hidden}
+.float{position:fixed;font-size:28px;opacity:.5;animation:fl 6s ease-in-out infinite;pointer-events:none}
+@keyframes fl{50%{transform:translateY(-14px) rotate(8deg)}}
+.card{position:relative;z-index:1;width:100%;max-width:980px;background:#fffafc;border-radius:32px;padding:26px 20px;
+box-shadow:0 10px 30px #b79cff44,0 0 0 5px #fff;text-align:center;margin-top:2vh}
+h1{font-size:30px;margin:6px 0}h2{font-size:19px;margin:14px 0 6px}
+.sub,.small{font-size:15px;opacity:.85;margin:4px 0 14px}.big{font-size:70px;line-height:1}
+.pic{width:200px;max-width:70%;height:auto;mix-blend-mode:multiply;display:block;margin:4px auto}
+button,.btn{font-family:inherit;cursor:pointer;border:0;color:#fff;font-size:17px;font-weight:600;padding:11px 24px;border-radius:999px;text-decoration:none;display:inline-block;
+background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 5px 0 #d97aa4;transition:.12s;margin:4px}
+button:hover,.btn:hover{transform:translateY(-2px)}button:active{transform:translateY(3px);box-shadow:0 2px 0 #d97aa4}
+button.alt{background:#fff;color:var(--ink);box-shadow:0 5px 0 #cdbdf5}
+.wrap{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;text-align:left}
+.left{flex:0 1 auto;overflow-x:auto;max-width:100%;padding:4px}
+.right{flex:1 1 250px;min-width:230px;max-width:360px}
+.grid{--cell:min(36px,calc((100vw - 72px)/var(--cols)));display:grid;gap:2px;justify-content:center}
+.empty{width:var(--cell);height:var(--cell)}
+.cell{position:relative;width:var(--cell);height:var(--cell);background:#fff;border:2px solid #d9c9ff;border-radius:6px}
+.cell input{width:100%;height:100%;border:0;background:transparent;text-align:center;font:600 calc(var(--cell)*.55) 'Fredoka',monospace;
+color:var(--ink);padding:0;margin:0;text-transform:uppercase;outline:0;caret-color:transparent;border-radius:4px}
+.cell .n{position:absolute;top:1px;left:3px;font-size:9px;opacity:.7;pointer-events:none;line-height:1}
+.cell.hl{background:#ffeaf3}.cell.act{background:#ffd0e3;border-color:var(--acc)}
+.cell.red{border:3px solid var(--red);box-shadow:0 0 0 2px #ffe0e6}
+.clue{padding:5px 10px;border-radius:12px;cursor:pointer;font-size:15px;line-height:1.35}
+.clue b{color:var(--acc)}.clue.on{background:#ffeaf3}
+.bottom{margin-top:22px;padding-top:12px;border-top:3px dashed var(--lav)}
+.tile{display:inline-flex;width:38px;height:42px;align-items:center;justify-content:center;border:3px solid var(--red);border-radius:9px;background:#fff;font-weight:600;font-size:21px;margin:3px}
+.field{font-family:inherit;font-size:19px;padding:10px 16px;border-radius:99px;border:3px solid var(--lav);width:min(320px,100%);text-align:center;color:var(--ink);margin:8px 0;outline:0}
+.field:focus{border-color:var(--acc)}.msg{min-height:24px;margin-top:8px;color:#d6557f;font-weight:500}
+.hidden{display:block;margin-top:70px;color:#fffafc;font-size:13px;word-break:break-all;text-decoration:none;user-select:text}
+</style></head><body>
+<span class="float" style="left:5%;top:8%">🌸</span><span class="float" style="right:6%;top:14%;animation-delay:1s">🎀</span>
+<span class="float" style="left:7%;bottom:10%;animation-delay:2s">☁️</span><span class="float" style="right:5%;bottom:14%;animation-delay:3s">⭐</span>
+<main class="card" id="app"><p>Loading…</p></main>
+<script src="config.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+const RICKROLL='https://www.youtube.com/watch?v=dQw4w9WgXcQ';   // the decoy button target
+async function api(path,body){
+ const r=await fetch(window.API_URL+path,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});
+ const j=await r.json().catch(()=>({}));
+ if(!r.ok)throw new Error(j.error||'something went wrong 🥺');
+ return j;}
+
+let P,cells={},wordCells=[],act={k:null,dir:'across'},busy=false;
+
+function build(){
+ const app=$('#app');app.innerHTML='';app.className='card';
+ app.append(el('h1',null,'A very cute crossword 🧩'),el('p','sub','Fill the grid. The red boxes hold something special 💌'));
+ cells={};wordCells=P.words.map(()=>[]);
+ P.words.forEach((w,wi)=>{for(let i=0;i<w.len;i++){
+  const r=w.row+(w.dir==='down'?i:0),c=w.col+(w.dir==='across'?i:0),k=r+','+c;
+  const cell=cells[k]||(cells[k]={k,r,c,across:null,down:null,n:null});
+  cell[w.dir]=wi;wordCells[wi].push(k);if(i===0)cell.n=w.n;}});
+ P.red.forEach(([r,c])=>{if(cells[r+','+c])cells[r+','+c].red=true});
+
+ const grid=el('div','grid');grid.style.setProperty('--cols',P.cols);grid.style.gridTemplateColumns=`repeat(${P.cols},var(--cell))`;
+ for(let r=0;r<P.rows;r++)for(let c=0;c<P.cols;c++){
+  const cell=cells[r+','+c];
+  if(!cell){grid.append(el('div','empty'));continue;}
+  const box=el('div','cell'+(cell.red?' red':''));
+  if(cell.n)box.append(el('span','n',cell.n));
+  const inp=el('input');inp.maxLength=2;inp.autocomplete='off';inp.autocapitalize='characters';inp.spellcheck=false;
+  inp.setAttribute('aria-label',`row ${r+1}, column ${c+1}`);
+  cell.box=box;cell.inp=inp;box.append(inp);grid.append(box);wire(cell);}
+
+ const right=el('div','right');
+ ['across','down'].forEach(dir=>{
+  right.append(el('h2',null,dir==='across'?'Across':'Down'));
+  P.words.map((w,wi)=>[w,wi]).filter(([w])=>w.dir===dir).sort((a,b)=>a[0].n-b[0].n).forEach(([w,wi])=>{
+   const d=el('div','clue');d.dataset.wi=wi;d.append(el('b',null,w.n+'. '),document.createTextNode(`${w.clue} (${w.len})`));
+   d.onclick=()=>{const list=wordCells[wi],k=list.find(x=>!cells[x].inp.value)||list[0];act={k,dir};cells[k].inp.focus();paint();};
+   right.append(d);});});
+
+ const left=el('div','left');left.append(grid);
+ const wrap=el('div','wrap');wrap.append(left,right);
+ const bottom=el('div','bottom');
+ bottom.innerHTML=`<h2>The red boxes ❤️</h2><div id="tray"></div>
+ <p class="small">Rearrange these letters into the secret word</p>
+ <input id="ana" class="field" placeholder="${P.anagramLen} letters" autocomplete="off" spellcheck="false"><br>
+ <button id="chk" class="alt">Check crossword ✓</button><button id="ok">Unlock ✨</button><div class="msg" id="msg"></div>`;
+ app.append(wrap,bottom);
+ $('#chk').onclick=()=>submit(false);$('#ok').onclick=()=>submit(true);$('#ana').onkeydown=e=>e.key==='Enter'&&submit(true);
+ tray();
+}
+
+function wire(cell){
+ const {k,inp,box}=cell;
+ inp.onfocus=()=>{if(act.k!==k)sel(k)};
+ box.onpointerdown=()=>{box._was=act.k===k};
+ inp.onclick=()=>{if(box._was&&cell.across!=null&&cell.down!=null){act.dir=act.dir==='across'?'down':'across';paint();}};
+ inp.oninput=()=>{const v=inp.value.toUpperCase().replace(/[^A-Z]/g,'').slice(-1);inp.value=v;tray();say('');if(v)step(1);};
+ inp.onkeydown=e=>{
+  if(e.key==='Backspace'){e.preventDefault();
+   if(inp.value){inp.value='';tray();}else{step(-1);cells[act.k].inp.value='';tray();}return;}
+  const A={ArrowLeft:[0,-1],ArrowRight:[0,1],ArrowUp:[-1,0],ArrowDown:[1,0]}[e.key];
+  if(!A)return;e.preventDefault();
+  let r=cell.r+A[0],c=cell.c+A[1];
+  while(r>=0&&c>=0&&r<P.rows&&c<P.cols&&!cells[r+','+c]){r+=A[0];c+=A[1];}
+  const t=cells[r+','+c];if(!t)return;
+  if(A[1]&&t.across!=null)act.dir='across';else if(A[0]&&t.down!=null)act.dir='down';
+  act.k=t.k;t.inp.focus();paint();};
+}
+function sel(k,dir){const c=cells[k];act={k,dir:dir&&c[dir]!=null?dir:(c[act.dir]!=null?act.dir:(c.across!=null?'across':'down'))};paint();}
+function step(d){const list=wordCells[cells[act.k][act.dir]],i=list.indexOf(act.k)+d;
+ if(i>=0&&i<list.length){act.k=list[i];cells[act.k].inp.focus();paint();}}
+function paint(){
+ document.querySelectorAll('.cell').forEach(e=>e.classList.remove('act','hl'));
+ const c=cells[act.k];if(!c)return;
+ let wi=c[act.dir];if(wi==null){act.dir=act.dir==='across'?'down':'across';wi=c[act.dir];}
+ wordCells[wi].forEach(k=>cells[k].box.classList.add('hl'));c.box.classList.add('act');
+ document.querySelectorAll('.clue').forEach(e=>e.classList.toggle('on',+e.dataset.wi===wi));}
+function tray(){const t=$('#tray');if(!t)return;t.innerHTML='';
+ P.red.forEach(([r,c])=>t.append(el('span','tile',cells[r+','+c].inp.value||'·')));}   // shown in server order (scrambled on purpose)
+function say(m){const e=$('#msg');if(e)e.textContent=m||'';}
+const collect=()=>{const g={};for(const k in cells){const v=cells[k].inp.value;if(v)g[k]=v;}return g;};
+
+async function submit(withAna){
+ if(busy)return;
+ if(withAna&&!$('#ana').value.trim())return say('Type your answer in the box first 🌸');
+ busy=true;say('Checking…');
+ try{
+  const r=await api('/api/solve',{grid:collect(),anagram:withAna?$('#ana').value:''});
+  if(!r.crossword)say(`Not quite yet 🥺 ${r.wrong} cell${r.wrong===1?'':'s'} still empty or wrong.`);
+  else if(!withAna)say('The crossword is perfect!! 🎉 Now unscramble the red letters 💖');
+  else if(r.anagram)return done(r.next);
+  else say('Crossword ✓ but that’s not the secret word 🥲 try rearranging the red letters!');
+ }catch(e){say(e.message)}
+ busy=false;
+}
+
+function done(next){
+ const app=$('#app');app.className='card';
+ app.innerHTML=`<img class="pic" src="img/cheer.gif" alt="" onerror="this.remove()"><h1>You did it!! 💖</h1><p>Here’s your next link ✨</p>
+ <p><a class="btn" id="go">Take me there 💌</a></p><a class="hidden" id="hid"></a>`;
+ $('#go').href=RICKROLL;
+ const h=$('#hid');if(/^https?:\/\//i.test(next)){h.href=next;h.textContent=next;}   // real link: text colour == background
+}
+
+(async()=>{try{P=await api('/api/puzzle');build()}catch(e){$('#app').textContent='Couldn’t load the puzzle 🥺 ('+e.message+')'}})();
+</script></body></html>
